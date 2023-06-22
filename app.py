@@ -151,7 +151,7 @@ def update_profile():
             'profile_name':name_receive,
             'profile_info':about_receive
         }
-        # sync_doc = {'profile_name':name_receive}
+        sync_doc = {'profile_name':name_receive,}
         if 'file_give' in request.files:
             file = request.files['file_give']
             filename = secure_filename(file.filename)
@@ -160,8 +160,8 @@ def update_profile():
             file.save(f'./static/{file_path}')
             new_doc['profile_pic'] = filename
             new_doc['profile_pic_real'] = file_path
-            # sync_doc['profile_pic_real'] = file_path
-        # user_post.update_many({'username':username},{'$set':sync_doc})
+            sync_doc['profile_pic_real'] = file_path
+        user_post.update_many({'username':username},{'$set':sync_doc})
         user_data.update_one({'username':username},{'$set':new_doc})
         return jsonify({'result':'success','msg':'Your profile has been updated'})
     except (jwt.ExpiredSignatureError,jwt.exceptions.DecodeError):
