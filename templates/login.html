@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static',filename='/favicon_io/apple-touch-icon.png')}}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static',filename='/favicon_io/favicon-32x32.png')}}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static',filename='/favicon_io/favicon-16x16.png')}}">
+    <link rel="manifest" href="{{ url_for('static',filename='/favicon_io/site.webmanifest')}}">
+    <!-- Meta OG -->
+    <meta property="og:title" content="Sweeter - the sweetest site">
+    <meta property="og:description" content="Post and hangout with us">
+    <meta property="og:image" content="{{url_for('static',filename='ogimage.png')}}">
+    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweeter | The sweetest</title>
+    <!-- Bulma -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <!-- Font awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- JQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"
+        integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- JQuery cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+    <!-- My Style Sheet -->
+    <link href="../static/mystyle.css" rel="stylesheet" />
+    <script>
+        function clear_field() {
+            $(':input')
+                .not(':button, :submit, :reset, :hidden')
+                .removeAttr('checked')
+                .removeAttr('selected')
+                .not(':checkbox, :radio, select')
+                .val('');
+        };
+        function sign_in() {
+            let username = $("#input-username").val();
+            let password = $("#input-password").val();
+
+            if (username === "") {
+                $("#help-id-login").text("Enter your id.");
+                $("#input-username").focus();
+                return;
+            } else {
+                $("#help-id-login").text("");
+            }
+
+            if (password === "") {
+                $("#help-password-login").text("Enter your password.");
+                $("#input-password").focus();
+                return;
+            } else {
+                $("#help-password-login").text("");
+            }
+            $.ajax({
+                type: "POST",
+                url: "/sign_in",
+                data: {
+                    'username_give': username,
+                    'password_give': password,
+                },
+                success: function (response) {
+                    if (response["result"] === "success") {
+                        let token = response['token'];
+                        $.cookie("token", token, { path: "/" });
+                        alert('Login successfully');
+                        window.location.replace("/");
+                    } else {
+                        alert(response["msg"]);
+                    };
+                },
+            });
+        };
+        function sign_up() {
+            let help_id = $('#help-id');
+            let help_pw = $("#help-password");
+            let help_pw2 = $("#help-password2");
+            let username = $("#input-username").val();
+            let password = $("#input-password").val();
+            let password2 = $("#input-password2").val();
+            // console.log(username, password, password2);
+
+            if (help_id.hasClass("is-danger")) {
+                alert("Check your id");
+                return;
+            } else if (!help_id.hasClass("is-success")) {
+                alert("Double check your id");
+                return;
+            }
+
+            if (password === "") {
+                help_pw
+                    .text("Please enter your password")
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-password").focus();
+                return;
+            } else if (!is_password(password)) {
+                help_pw
+                    .text(
+                        "Please check your password. For your password, please enter 8-20 English characters, numbers, or the following special characters (!@#$%^&*)"
+                    )
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-password").focus();
+                return;
+            } else {
+                help_pw
+                    .text("This password can be used!")
+                    .removeClass("is-danger")
+                    .addClass("is-success");
+            }
+            if (password2 === "") {
+                help_pw2
+                    .text("Please enter your password")
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-password2").focus();
+                return;
+            } else if (password2 !== password) {
+                help_pw2
+                    .text("Your passwords do'nt match")
+                    .removeClass("is-safe")
+                    .addClass("is-danger");
+                $("#input-password2").focus();
+                return;
+            } else {
+                help_pw2
+                    .text("Perfect your password match")
+                    .removeClass("is-danger")
+                    .addClass("is-success");
+            }
+            $.ajax({
+                type: "POST",
+                url: "/sign_up/save",
+                data: {
+                    username_give: username,
+                    password_give: password,
+                },
+                success: function (response) {
+                    alert("Your are signed up");
+                    window.location.replace("/login");
+                },
+            });
+        };
+        function toggle_sign_up() {
+            $("#sign-up-box").toggleClass("is-hidden")
+            $("#div-sign-in-or-up").toggleClass("is-hidden")
+            $("#btn-check-dup").toggleClass("is-hidden")
+            $("#help-id").toggleClass("is-hidden")
+            $("#help-password").toggleClass("is-hidden")
+            $("#help-password2").toggleClass("is-hidden")
+        };
+        function is_nickname(thevalue) {
+            var regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{2,10}$/;
+            return regExp.test(thevalue);
+        };
+        function is_password(thevalue) {
+            var regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
+            return regExp.test(thevalue);
+        };
+        function check_dup() {
+            let inputUsername = $('#input-username');
+            let help_id = $('#help-id');
+            let username = inputUsername.val();
+            if (username == '') {
+                help_id.text('Enter your id')
+                    .removeClass('is-safe')
+                    .addClass('is-danger');
+                inputUsername.focus();
+                return;
+            };
+            if (!is_nickname(username)) {
+                help_id.text('Accepted id are, 2-10 English characters, numbers, or special characters(._-)')
+                    .removeClass('is-safe')
+                    .addClass('is-danger');
+                inputUsername.focus();
+                return;
+            };
+            help_id.addClass('is-loading');
+            $.ajax({
+                type: "POST",
+                url: "/sign_up/check_dup",
+                data: {
+                    'username_give': username,
+                },
+                success: function (response) {
+                    if (response["exists"]) {
+                        help_id.text("Someone already has this id")
+                            .removeClass("is-safe")
+                            .addClass("is-danger");
+                        inputUsername.focus();
+                    } else {
+                        help_id.text("Available")
+                            .removeClass("is-danger")
+                            .addClass("is-success");
+                    }
+                    help_id.removeClass("is-loading");
+                },
+            });
+        };
+    </script>
+</head>
+
+<body>
+    <section class="hero is-white">
+        <div class="hero-body has-text-centered" style="padding-bottom: 1rem; margin: auto;">
+            <h1 class="title is-fox">Sweeter</h1>
+            <h3 class="subtitle is-fox">The Sweetest</h3>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="box" style="margin:auto; max-width: 480px;">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+
+                            <div class="field has-addons">
+                                <div class="control has-icons-left" style="width: 100%;">
+                                    <input id="input-username" class="input" type="text" placeholder="id">
+                                    <span class="icon is-small is-left"><i class="fa fa-user"></i></span>
+                                </div>
+                                <div id="btn-check-dup" class="control is-hidden">
+                                    <button class="button is-fox" onclick="check_dup()">Check your id</button>
+                                </div>
+                            </div>
+
+                            <p id="help-id" class="help is-hidden">Accepted id are, 2-10 English characters, numbers, or
+                                special
+                                characters(._-)</p>
+                            <p id="help-id-login" class="help is-danger"></p>
+
+                            <div class="field">
+                                <div class="control has-icons-left">
+                                    <input id="input-password" class="input" type="password" placeholder="password">
+                                    <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                                </div>
+                                <p id="help-password" class="help is-hidden">Accepted password are, 8-20 English
+                                    characters,
+                                    numbers, or special characters(!@#$%^&*)</p>
+                                <p id="help-password-login" class="help is-danger"></p>
+                            </div>
+
+                        </div>
+
+                        <div id="div-sign-in-or-up" class="has-text-centered">
+                            <nav class="level is-mobile">
+                                <button class="level-item button is-fox" onclick="sign_in()">
+                                    Sign In
+                                </button>
+                                <button class="level-item button is-fox is-outlined" onclick="clear_field()">
+                                    Clear
+                                </button>
+                            </nav>
+
+                            <hr />
+
+                            <h4 class="mb-3">If you have not yet signed up</h4>
+                            <nav class="level is-mobile">
+                                <button class="level-item button is-fox is-outlined" onclick="toggle_sign_up()">
+                                    Sign Up
+                                </button>
+                            </nav>
+
+                        </div>
+
+                        <div id="sign-up-box" class="is-hidden">
+                            <div class="mb-5">
+                                <div class="field">
+                                    <div class="control has-icons-left" style="width: 100%">
+                                        <input id="input-password2" class="input" type="password"
+                                            placeholder="Confirm your password" />
+                                        <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                                    </div>
+                                    <p id="help-password2" class="help is-hidden">
+                                        Re enter your password again
+                                    </p>
+                                </div>
+                            </div>
+                            <nav class="level is-mobile">
+                                <button class="level-item button is-fox" onclick="sign_up()">
+                                    Sign Up
+                                </button>
+                                <button class="level-item button is-fox is-outlined" onclick="toggle_sign_up()">
+                                    Cancel
+                                </button>
+                                <button class="level-item button is-fox is-outlined" onclick="clear_field()">
+                                    Clear
+                                </button>
+                            </nav>
+                        </div>
+
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>
